@@ -11,7 +11,7 @@
             --black-key-width: 50px;
             --black-key-height: 155px;
             
-            /* 維持你要求的數值 */
+            /* 你的精確要求數值 */
             --black-key-gap: 18px;     
             --container-padding: 17px; 
         }
@@ -74,18 +74,18 @@
             margin: 0 calc(var(--black-key-gap) / 2);
         }
 
-        /* --- 修正定位：向右大幅偏移 (+8px) --- */
+        /* --- 核心修正：黑鍵右偏移 +8px --- */
         
         .group-2 { 
-            /* 修正為 +8px，讓黑鍵明顯向右移動 */
+            /* 定位公式：起點 + 白鍵偏移 - 黑鍵半寬偏移 + 8px 右移 */
             left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--black-key-gap) / 2)) + 8px); 
         }
 
         .group-3 { 
-            /* 修正為 +8px */
             left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) + (var(--black-key-gap) / 2)) + 8px); 
         }
 
+        /* 第二個八度偏移量 (7個白鍵寬度) */
         .octave-2 { transform: translateX(calc(var(--white-key-width) * 7)); }
 
         .correct { background-color: rgba(76, 175, 80, 0.7) !important; box-shadow: 0 0 20px #4CAF50; }
@@ -103,12 +103,13 @@
             box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
             font-weight: bold;
         }
+        .btn-reset:hover { background: #45a049; }
     </style>
 </head>
 <body>
 
     <div class="score-board">得分: <span id="score">0</span></div>
-    <div class="instructions" id="mission">載入中...</div>
+    <div class="instructions" id="mission">遊戲載入中...</div>
 
     <div class="piano-container">
         <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
@@ -129,7 +130,7 @@
         </div>
     </div>
 
-    <button class="btn-reset" onclick="nextRound()">下一題 (Next)</button>
+    <button class="btn-reset" onclick="nextRound()">下一題 (Next Level)</button>
 
     <script>
         let score = 0;
@@ -141,20 +142,27 @@
             correctClicked = 0;
             currentTarget = Math.random() > 0.5 ? 2 : 3;
             const missionDisplay = document.getElementById('mission');
-            missionDisplay.innerHTML = currentTarget === 2 ? 
-                "🏠 找出所有的 <span style='color:#e67e22'>『2個黑鍵』</span> (小房子)" : 
-                "🏰 找出所有的 <span style='color:#e67e22'>『3個黑鍵』</span> (大房子)";
+            
+            if (currentTarget === 2) {
+                missionDisplay.innerHTML = "🏠 找出所有的 <span style='color:#e67e22'>『2個黑鍵』</span> (小房子)";
+            } else {
+                missionDisplay.innerHTML = "🏰 找出所有的 <span style='color:#e67e22'>『3個黑鍵』</span> (大房子)";
+            }
         }
 
         function checkAnswer(num, element) {
             if (element.classList.contains('correct') || element.classList.contains('wrong')) return;
+
             if (num === currentTarget) {
                 element.classList.add('correct');
                 score += 10;
                 correctClicked++;
                 document.getElementById('score').innerText = score;
                 if (correctClicked === 2) {
-                    setTimeout(() => { alert("答對了！你找得很快喔！"); nextRound(); }, 200);
+                    setTimeout(() => {
+                        alert("非常棒！全對了！");
+                        nextRound();
+                    }, 250);
                 }
             } else {
                 element.classList.add('wrong');
@@ -162,6 +170,7 @@
                 document.getElementById('score').innerText = score;
             }
         }
+
         nextRound();
     </script>
 </body>
