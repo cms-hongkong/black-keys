@@ -11,9 +11,9 @@
             --black-key-width: 50px;
             --black-key-height: 155px;
             
-            /* 分別設定不同的間距 */
-            --gap-group-2: 36px;  /* 2個黑鍵的間距 */
-            --gap-group-3: 34px;  /* 3個黑鍵的間距 (修正為 34px) */
+            /* 間距設定 */
+            --gap-group-2: 36px;  
+            --gap-group-3: 34px;  
             
             --container-padding: 17px; 
             --right-offset: 18px;
@@ -57,12 +57,14 @@
             box-sizing: border-box;
         }
 
+        /* --- 黑鍵組容器：移高 2px --- */
         .black-group {
             position: absolute;
             display: flex;
             cursor: pointer;
             z-index: 2;
-            top: var(--container-padding);
+            /* 修正：從 padding 處再向上減去 2px */
+            top: calc(var(--container-padding) - 2px); 
             padding: 5px;
             border-radius: 8px;
         }
@@ -75,7 +77,7 @@
             box-shadow: 4px 6px 12px rgba(0,0,0,0.6);
         }
 
-        /* --- 2個黑鍵組的間距與定位 --- */
+        /* --- 2個黑鍵組 --- */
         .group-2 .black-key {
             margin: 0 calc(var(--gap-group-2) / 2);
         }
@@ -83,7 +85,7 @@
             left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset)); 
         }
 
-        /* --- 3個黑鍵組的間距與定位 --- */
+        /* --- 3個黑鍵組 --- */
         .group-3 .black-key {
             margin: 0 calc(var(--gap-group-3) / 2);
         }
@@ -113,7 +115,7 @@
 <body>
 
     <div class="score-board">得分: <span id="score">0</span></div>
-    <div class="instructions" id="mission">載入中...</div>
+    <div class="instructions" id="mission">遊戲載入中...</div>
 
     <div class="piano-container">
         <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
@@ -134,7 +136,7 @@
         </div>
     </div>
 
-    <button class="btn-reset" onclick="nextRound()">下一題 (Next)</button>
+    <button class="btn-reset" onclick="nextRound()">下一題</button>
 
     <script>
         let score = 0;
@@ -159,7 +161,7 @@
                 correctClicked++;
                 document.getElementById('score').innerText = score;
                 if (correctClicked === 2) {
-                    setTimeout(() => { alert("正確！大房子和小房子都難不倒你！"); nextRound(); }, 200);
+                    setTimeout(() => { alert("正確！位置找得真準！"); nextRound(); }, 200);
                 }
             } else {
                 element.classList.add('wrong');
