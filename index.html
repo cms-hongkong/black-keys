@@ -11,9 +11,12 @@
             --black-key-width: 50px;
             --black-key-height: 155px;
             
-            /* 維持你要求的比例 */
-            --black-key-gap: 18px;     
+            /* 根據要求修正：18px 的兩倍 = 36px */
+            --black-key-gap: 36px;     
             --container-padding: 17px; 
+            
+            /* 右偏移量保持 18px */
+            --right-offset: 18px;
         }
 
         body {
@@ -62,7 +65,7 @@
             top: var(--container-padding);
             padding: 5px;
             border-radius: 8px;
-            transition: background-color 0.2s;
+            /* 移除過渡動畫確保反應即時 */
         }
 
         .black-key {
@@ -71,23 +74,26 @@
             background: linear-gradient(to bottom, #444 0%, #000 15%, #000 100%);
             border-radius: 0 0 4px 4px;
             box-shadow: 4px 6px 12px rgba(0,0,0,0.6);
+            /* 套用 36px 間距 */
             margin: 0 calc(var(--black-key-gap) / 2);
         }
 
-        /* --- 修正定位：總偏移量增加至 +16px --- */
+        /* --- 修正定位：確保大間距下依然維持中心偏移 --- */
         
         .group-2 { 
-            /* 最終公式：加上 16px 的右移量 */
-            left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--black-key-gap) / 2)) + 16px); 
+            /* 定位公式：基準縫隙 - (黑鍵寬 + 半個間距) + 右偏移 */
+            left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--black-key-gap) / 2)) + var(--right-offset)); 
         }
 
         .group-3 { 
-            left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) + (var(--black-key-gap) / 2)) + 16px); 
+            /* 定位公式：基準縫隙 - (黑鍵寬 + 半個間距) + 右偏移 */
+            left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) + (var(--black-key-gap) / 2)) + var(--right-offset)); 
         }
 
-        /* 八度偏移 */
+        /* 第二個八度 */
         .octave-2 { transform: translateX(calc(var(--white-key-width) * 7)); }
 
+        /* 回饋顏色 */
         .correct { background-color: rgba(76, 175, 80, 0.7) !important; box-shadow: 0 0 20px #4CAF50; }
         .wrong { background-color: rgba(231, 76, 60, 0.7) !important; box-shadow: 0 0 20px #e74c3c; }
 
@@ -129,7 +135,7 @@
         </div>
     </div>
 
-    <button class="btn-reset" onclick="nextRound()">下一題</button>
+    <button class="btn-reset" onclick="nextRound()">下一題 (Next)</button>
 
     <script>
         let score = 0;
@@ -142,8 +148,8 @@
             currentTarget = Math.random() > 0.5 ? 2 : 3;
             const missionDisplay = document.getElementById('mission');
             missionDisplay.innerHTML = currentTarget === 2 ? 
-                "🏠 找出所有的 <span style='color:#e67e22'>『2個黑鍵』</span> (小房子)" : 
-                "🏰 找出所有的 <span style='color:#e67e22'>『3個黑鍵』</span> (大房子)";
+                "🏠 找出所有的 <span style='color:#e67e22'>『2個黑鍵』</span>" : 
+                "🏰 找出所有的 <span style='color:#e67e22'>『3個黑鍵』</span>";
         }
 
         function checkAnswer(num, element) {
@@ -154,7 +160,7 @@
                 correctClicked++;
                 document.getElementById('score').innerText = score;
                 if (correctClicked === 2) {
-                    setTimeout(() => { alert("完全正確！太強了！"); nextRound(); }, 250);
+                    setTimeout(() => { alert("棒極了！你的眼力真好！"); nextRound(); }, 200);
                 }
             } else {
                 element.classList.add('wrong');
