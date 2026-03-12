@@ -3,19 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鋼琴黑鍵大冒險 🎹 Mobile Final</title>
+    <title>鋼琴黑鍵大冒險 🎹 Mobile Burst</title>
     <style>
         :root {
-            /* 微調寬度確保 14 鍵完全顯示 */
             --white-key-width: 52px; 
             --white-key-height: 170px;
             --black-key-width: 34px;
             --black-key-height: 105px;
-            
             --gap-group-2: 24px;  
             --gap-group-3: 22px;  
-            --gap-group-3-last: 21px; /* 最右組間距 -1px */
-            
+            --gap-group-3-last: 21px;
             --container-padding: 12px; 
             --right-offset: 12px; 
         }
@@ -30,7 +27,7 @@
             padding: 10px;
             user-select: none;
             touch-action: manipulation;
-            overflow-x: hidden; /* 防止左右晃動 */
+            overflow-x: hidden;
         }
 
         .score-board { font-size: 1.8rem; margin-bottom: 8px; color: #d35400; font-weight: bold; }
@@ -42,7 +39,6 @@
             max-width: 90vw;
         }
 
-        /* 鋼琴容器 */
         .piano-container {
             display: flex;
             position: relative;
@@ -51,8 +47,6 @@
             border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
             border-bottom: 6px solid #000;
-            
-            /* 【核心修正】將整個琴明顯向右平移，避開左邊邊緣/鏡頭 */
             margin-left: 40px; 
             margin-right: 10px;
         }
@@ -85,24 +79,20 @@
             box-shadow: 2px 3px 6px rgba(0,0,0,0.6);
         }
 
-        /* --- 左側第一組 (2個) --- */
         .group-2 .black-key { margin: 0 calc(var(--gap-group-2) / 2); }
         .group-2 { 
             left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset)); 
         }
 
-        /* --- 中間第一組 (3個) --- */
         .group-3 .black-key { margin: 0 calc(var(--gap-group-3) / 2); }
         .group-3 { 
             left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) + (var(--gap-group-3) / 2)) + var(--right-offset)); 
         }
 
-        /* --- 左邊第二組 (2個) --- */
         .octave-2-low { 
             left: calc(var(--container-padding) + (var(--white-key-width) * 8) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset)); 
         }
 
-        /* --- 【對稱修正】最後一組 (3個) --- */
         .last-group-3 .black-key { 
             margin: 0 calc(var(--gap-group-3-last) / 2); 
         }
@@ -125,6 +115,30 @@
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
             font-weight: bold;
+        }
+
+        /* --- 【新加入】煙花粒子樣式 --- */
+        .firework-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            pointer-events: none; /* 粒子不接受點擊 */
+            z-index: 10; /* 確保粒子在最上層爆開 */
+            opacity: 0; /* 初始透明 */
+        }
+
+        /* --- 【新加入】煙花爆炸動畫 --- */
+        @keyframes firework-burst {
+            0% {
+                transform: translate(-50%, -50%) scale(1); /* 從中心點開始 */
+                opacity: 1; /* 完全不透明 */
+            }
+            100% {
+                /* 飛散到指定位置，並縮小消散 */
+                transform: translate(var(--x), var(--y)) scale(0); 
+                opacity: 0; /* 變透明 */
+            }
         }
     </style>
 </head>
@@ -171,19 +185,68 @@
         function checkAnswer(num, element) {
             if (element.classList.contains('correct') || element.classList.contains('wrong')) return;
             if (num === currentTarget) {
+                // 回答正確：加入「煙花」效果
                 element.classList.add('correct');
+                createFireworkBurst(element); // 【新呼叫】觸發煙花爆炸
+
                 score += 10;
                 correctClicked++;
                 document.getElementById('score').innerText = score;
                 if (correctClicked === 2) {
-                    setTimeout(() => { alert("好嘢！全對！"); nextRound(); }, 200);
+                    setTimeout(() => { alert("答對了！"); nextRound(); }, 300); // 稍微延遲 alert，讓煙花爆完
                 }
             } else {
+                // 回答錯誤
                 element.classList.add('wrong');
                 score = Math.max(0, score - 5);
                 document.getElementById('score').innerText = score;
             }
         }
+
+        /* --- 【新加入】生成煙花爆炸粒子的 JavaScript 函數 --- */
+        function createFireworkBurst(element) {
+            const pianoContainer = document.querySelector('.piano-container');
+            const elementRect = element.getBoundingClientRect(); // 獲取琴鍵組的位置
+            const containerRect = pianoContainer.getBoundingClientRect(); // 獲取鋼琴容器的位置
+
+            // 計算粒子爆炸的中心點（琴鍵組的中心）
+            const centerX = elementRect.left + elementRect.width / 2 - containerRect.left;
+            const centerY = elementRect.top + elementRect.height / 2 - containerRect.top;
+
+            const particleCount = 12; // 粒子數量
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('firework-particle');
+                
+                // 設置粒子的初始位置在中心點
+                particle.style.left = centerX + 'px';
+                particle.style.top = centerY + 'px';
+
+                // 生成粒子飛散的隨機 x、y 距離和顏色
+                const translateX = (Math.random() - 0.5) * 100; // 飛散範圍 -50 到 50 px
+                const translateY = (Math.random() - 0.5) * 100; // 飛散範圍 -50 到 50 px
+                const colors = ['#FFD700', '#FFFFE0', '#FFA500']; // 金色、亮黃色、橘色
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                // 將飛散距離和顏色通過 CSS 變數傳遞給 CSS
+                particle.style.setProperty('--x', translateX + 'px');
+                particle.style.setProperty('--y', translateY + 'px');
+                particle.style.backgroundColor = color;
+                
+                // 設置微微隨機的動畫延遲，增加自然感
+                particle.style.animationDelay = (Math.random() * 0.2) + 's'; 
+                particle.style.animation = 'firework-burst 0.8s ease-out forwards'; // 應用爆炸動畫
+
+                pianoContainer.appendChild(particle); // 將粒子加入鋼琴容器中
+
+                // 動畫結束後（0.8秒動畫 + 0.2秒延遲），從 DOM 中移除粒子，避免過多粒子卡頓
+                setTimeout(() => {
+                    particle.remove();
+                }, 1000); 
+            }
+        }
+
         nextRound();
     </script>
 </body>
