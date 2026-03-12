@@ -6,118 +6,123 @@
     <title>鋼琴黑鍵大冒險 🎹</title>
     <style>
         :root {
-            /* 基本尺寸 */
-            --white-key-width: 80px;  /* 稍微再加寬，讓畫面更清楚 */
+            /* 基本尺寸設定 */
+            --white-key-width: 80px;
             --white-key-height: 250px;
-            --black-key-width: 50px;  
-            --black-key-height: 150px;
-            /* **修正：增加黑鍵之間的間距** */
-            --black-key-gap: 15px; 
-            --container-padding: 20px;
+            --black-key-width: 50px;
+            --black-key-height: 155px;
+            
+            /* 你的精確要求 */
+            --black-key-gap: 18px;     /* 黑鍵之間的間距 */
+            --container-padding: 22px; /* 鋼琴邊框內距 */
         }
 
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #f4f7f9;
+            background-color: #eef2f5;
             margin: 0;
             padding: 20px;
             user-select: none;
         }
 
-        .instructions { font-size: 1.4rem; margin-bottom: 20px; color: #333; font-weight: bold; background: white; padding: 15px 30px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 3px solid #4CAF50; }
-        .score-board { font-size: 2rem; margin-bottom: 15px; color: #e67e22; font-weight: bold; text-shadow: 1px 1px 0 white; }
+        .score-board { font-size: 2rem; margin-bottom: 15px; color: #d35400; font-weight: bold; }
+        .instructions { 
+            font-size: 1.5rem; margin-bottom: 25px; color: #2c3e50; font-weight: bold; 
+            background: white; padding: 15px 35px; border-radius: 50px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 4px solid #4CAF50;
+        }
 
         /* 鋼琴容器 */
         .piano-container {
             display: flex;
             position: relative;
-            background: #1a1a1a;
+            background: #222;
             padding: var(--container-padding);
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
 
-        /* 白鍵 */
+        /* 白鍵樣式 */
         .white-key {
             width: var(--white-key-width);
             height: var(--white-key-height);
-            background: linear-gradient(to bottom, #eee 0%, #fff 5%, #fff 100%);
-            border: 1px solid #ccc;
-            border-radius: 0 0 8px 8px;
+            background: linear-gradient(to bottom, #eee 0%, #fff 8%, #fff 100%);
+            border: 1px solid #bbb;
+            border-radius: 0 0 6px 6px;
             z-index: 1;
+            box-sizing: border-box;
         }
 
-        /* 黑鍵組 - 修正定位邏輯 */
+        /* 黑鍵組容器 */
         .black-group {
             position: absolute;
             display: flex;
             cursor: pointer;
             z-index: 2;
             top: var(--container-padding);
-            padding: 5px;
-            border-radius: 10px;
-            /* 移除 transition 避免抖動 */
+            padding: 6px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
         }
 
         .black-key {
             width: var(--black-key-width);
             height: var(--black-key-height);
-            background: linear-gradient(to bottom, #444 0%, #000 15%, #000 100%);
-            border-radius: 0 0 5px 5px;
-            box-shadow: 3px 5px 8px rgba(0,0,0,0.6);
-            /* **修正：黑鍵之間的距離** */
+            background: linear-gradient(to bottom, #444 0%, #000 12%, #000 100%);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 4px 6px 10px rgba(0,0,0,0.5);
+            /* 設置黑鍵間距：一半在左，一半在右 */
             margin: 0 calc(var(--black-key-gap) / 2);
         }
 
-        /* 精確對位計算公式：
-           縫隙位置 = (白鍵個數 * 寬度)
-           黑鍵組起始點 = 縫隙位置 - (第一個黑鍵中心點距離組起始點的距離)
-        */
-
-        /* 2個黑鍵組：跨在 C-D 和 D-E 縫隙上 */
+        /* --- 精確對位計算 --- */
+        
+        /* 2個黑鍵組 (C#, D#)：中心對準第1-2及2-3白鍵縫隙 */
         .group-2 { 
-            left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) / 2) - (var(--black-key-gap) / 2) - 5px); 
+            /* 起點 = 內距 + 1個白鍵寬 - (黑鍵寬 + 半個間距) */
+            left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--black-key-gap) / 2)) - 6px);
         }
 
-        /* 3個黑鍵組：跨在 F-G, G-A, A-B 縫隙上 */
+        /* 3個黑鍵組 (F#, G#, A#)：中心對準第4-5, 5-6, 6-7白鍵縫隙 */
         .group-3 { 
-            left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) / 2) - (var(--black-key-gap) / 2) - 5px); 
+            /* 起點 = 內距 + 4個白鍵寬 - (黑鍵寬 + 半個間距) */
+            left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) + (var(--black-key-gap) / 2)) - 6px);
         }
 
+        /* 第二八度偏移：剛好是 7 個白鍵的寬度 */
         .octave-2 { transform: translateX(calc(var(--white-key-width) * 7)); }
 
-        /* 回饋效果 */
-        .correct { background-color: rgba(76, 175, 80, 0.8) !important; box-shadow: 0 0 20px #4CAF50; }
-        .wrong { background-color: rgba(231, 76, 60, 0.8) !important; box-shadow: 0 0 20px #e74c3c; }
+        /* 反饋效果 */
+        .correct { background-color: rgba(76, 175, 80, 0.7) !important; box-shadow: 0 0 15px #4CAF50; }
+        .wrong { background-color: rgba(231, 76, 60, 0.7) !important; box-shadow: 0 0 15px #e74c3c; }
 
         .btn-reset {
             margin-top: 40px;
-            padding: 15px 40px;
-            font-size: 1.2rem;
+            padding: 18px 50px;
+            font-size: 1.3rem;
             background: #4CAF50;
             color: white;
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 6px 12px rgba(76, 175, 80, 0.3);
+            transition: all 0.2s;
         }
-        .btn-reset:active { transform: translateY(2px); }
+        .btn-reset:hover { background: #45a049; transform: scale(1.05); }
+        .btn-reset:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
 
-    <div class="score-board">得分: <span id="score">0</span></div>
-    <div class="instructions" id="mission">載入中...</div>
+    <div class="score-board">得分 (Score): <span id="score">0</span></div>
+    <div class="instructions" id="mission">讀取遊戲中...</div>
 
     <div class="piano-container">
-        <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
-        <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
-        
-        <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
-        <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
+        <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
+        <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
 
         <div class="black-group group-2" onclick="checkAnswer(2, this)">
             <div class="black-key"></div><div class="black-key"></div>
@@ -134,7 +139,7 @@
         </div>
     </div>
 
-    <button class="btn-reset" onclick="nextRound()">下一題 (Next)</button>
+    <button class="btn-reset" onclick="nextRound()">下一題 (Next Level)</button>
 
     <script>
         let score = 0;
@@ -142,13 +147,23 @@
         let correctClicked = 0;
 
         function nextRound() {
+            // 清除狀態
             document.querySelectorAll('.black-group').forEach(g => g.classList.remove('correct', 'wrong'));
             correctClicked = 0;
+            
+            // 隨機切換題目
             currentTarget = Math.random() > 0.5 ? 2 : 3;
-            document.getElementById('mission').innerText = currentTarget === 2 ? "🏠 找出所有的『2個黑鍵』！" : "🏰 找出所有的『3個黑鍵』！";
+            const missionDisplay = document.getElementById('mission');
+            
+            if (currentTarget === 2) {
+                missionDisplay.innerHTML = "🏠 找出所有的 <span style='color:#e74c3c'>『2個黑鍵』</span> (小房子)！";
+            } else {
+                missionDisplay.innerHTML = "🏰 找出所有的 <span style='color:#e74c3c'>『3個黑鍵』</span> (大房子)！";
+            }
         }
 
         function checkAnswer(num, element) {
+            // 避免重複點擊
             if (element.classList.contains('correct') || element.classList.contains('wrong')) return;
 
             if (num === currentTarget) {
@@ -156,8 +171,13 @@
                 score += 10;
                 correctClicked++;
                 document.getElementById('score').innerText = score;
+                
+                // 畫面上一共有兩組目標
                 if (correctClicked === 2) {
-                    setTimeout(() => { alert("太棒了！你找對了！"); nextRound(); }, 200);
+                    setTimeout(() => {
+                        alert("太棒了！你找齊了所有" + (currentTarget === 2 ? "小房子" : "大房子") + "！");
+                        nextRound();
+                    }, 250);
                 }
             } else {
                 element.classList.add('wrong');
@@ -165,6 +185,8 @@
                 document.getElementById('score').innerText = score;
             }
         }
+
+        // 啟動遊戲
         nextRound();
     </script>
 </body>
