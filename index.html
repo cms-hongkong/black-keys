@@ -6,15 +6,14 @@
     <title>鋼琴黑鍵大冒險 🎹</title>
     <style>
         :root {
-            /* 基礎尺寸 */
             --white-key-width: 80px;
             --white-key-height: 250px;
             --black-key-width: 50px;
             --black-key-height: 155px;
             
-            /* 你指定的最新修正數值 */
-            --black-key-gap: 18px;     /* 黑鍵間距修正為 18px */
-            --container-padding: 17px; /* 邊框內距修正為 17px */
+            /* 你指定的數值 */
+            --black-key-gap: 18px;     
+            --container-padding: 17px; 
         }
 
         body {
@@ -35,7 +34,6 @@
             box-shadow: 0 6px 15px rgba(0,0,0,0.1); border: 4px solid #4CAF50;
         }
 
-        /* 鋼琴容器 */
         .piano-container {
             display: flex;
             position: relative;
@@ -46,7 +44,6 @@
             border-bottom: 10px solid #000;
         }
 
-        /* 白鍵樣式 */
         .white-key {
             width: var(--white-key-width);
             height: var(--white-key-height);
@@ -57,14 +54,13 @@
             box-sizing: border-box;
         }
 
-        /* 黑鍵組容器 */
         .black-group {
             position: absolute;
             display: flex;
             cursor: pointer;
             z-index: 2;
             top: var(--container-padding);
-            padding: 5px; /* 內部微調空間 */
+            padding: 5px;
             border-radius: 8px;
             transition: background-color 0.2s;
         }
@@ -75,27 +71,23 @@
             background: linear-gradient(to bottom, #444 0%, #000 15%, #000 100%);
             border-radius: 0 0 4px 4px;
             box-shadow: 4px 6px 12px rgba(0,0,0,0.6);
-            /* 設置黑鍵間距 18px */
             margin: 0 calc(var(--black-key-gap) / 2);
         }
 
-        /* --- 精確對位計算 --- */
-        /* 計算邏輯：讓黑鍵組的中心空隙準確對準白鍵缝隙 */
+        /* --- 修正定位：向右偏移 --- */
         
         .group-2 { 
-            /* 偏移量 = 內距 + 1個白鍵寬 - (單個黑鍵寬 + 半個間距) - 容器內補償 */
-            left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--black-key-gap) / 2)) - 5px); 
+            /* 將最後的補償值改為 +2px，實現向右移動 */
+            left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--black-key-gap) / 2)) + 2px); 
         }
 
         .group-3 { 
-            /* 偏移量 = 內距 + 4個白鍵寬 - (單個黑鍵寬 + 半個間距) - 容器內補償 */
-            left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) + (var(--black-key-gap) / 2)) - 5px); 
+            /* 同樣改為 +2px */
+            left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) + (var(--black-key-gap) / 2)) + 2px); 
         }
 
-        /* 第二個八度偏移 (7個白鍵寬度) */
         .octave-2 { transform: translateX(calc(var(--white-key-width) * 7)); }
 
-        /* 反饋顏色 */
         .correct { background-color: rgba(76, 175, 80, 0.7) !important; box-shadow: 0 0 20px #4CAF50; }
         .wrong { background-color: rgba(231, 76, 60, 0.7) !important; box-shadow: 0 0 20px #e74c3c; }
 
@@ -111,14 +103,12 @@
             box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
             font-weight: bold;
         }
-        .btn-reset:hover { background: #45a049; transform: translateY(-2px); }
-        .btn-reset:active { transform: translateY(1px); }
     </style>
 </head>
 <body>
 
     <div class="score-board">得分: <span id="score">0</span></div>
-    <div class="instructions" id="mission">遊戲載入中...</div>
+    <div class="instructions" id="mission">載入中...</div>
 
     <div class="piano-container">
         <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
@@ -151,27 +141,20 @@
             correctClicked = 0;
             currentTarget = Math.random() > 0.5 ? 2 : 3;
             const missionDisplay = document.getElementById('mission');
-            
-            if (currentTarget === 2) {
-                missionDisplay.innerHTML = "🏠 請找出所有的 <span style='color:#e67e22'>『2個黑鍵』</span> (小房子)";
-            } else {
-                missionDisplay.innerHTML = "🏰 請找出所有的 <span style='color:#e67e22'>『3個黑鍵』</span> (大房子)";
-            }
+            missionDisplay.innerHTML = currentTarget === 2 ? 
+                "🏠 找出所有的 <span style='color:#e67e22'>『2個黑鍵』</span>" : 
+                "🏰 找出所有的 <span style='color:#e67e22'>『3個黑鍵』</span>";
         }
 
         function checkAnswer(num, element) {
             if (element.classList.contains('correct') || element.classList.contains('wrong')) return;
-
             if (num === currentTarget) {
                 element.classList.add('correct');
                 score += 10;
                 correctClicked++;
                 document.getElementById('score').innerText = score;
                 if (correctClicked === 2) {
-                    setTimeout(() => {
-                        alert("好厲害！全對了！");
-                        nextRound();
-                    }, 250);
+                    setTimeout(() => { alert("答對了！"); nextRound(); }, 200);
                 }
             } else {
                 element.classList.add('wrong');
@@ -179,7 +162,6 @@
                 document.getElementById('score').innerText = score;
             }
         }
-
         nextRound();
     </script>
 </body>
