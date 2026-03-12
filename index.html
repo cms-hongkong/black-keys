@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鋼琴黑鍵大冒險 🎹</title>
+    <style>
+        :root {
+            --white-key-width: 60px;
+            --white-key-height: 200px;
+            --black-key-width: 40px;
+            --black-key-height: 120px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 { color: #333; margin-bottom: 10px; }
+        .instructions { font-size: 1.2rem; margin-bottom: 20px; color: #555; font-weight: bold; }
+        .score-board { font-size: 1.5rem; margin-bottom: 10px; color: #ff6600; }
+
+        /* 鋼琴容器 */
+        .piano-container {
+            display: flex;
+            position: relative;
+            background: #333;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            overflow-x: auto;
+            max-width: 95vw;
+        }
+
+        /* 白鍵樣式 */
+        .white-key {
+            width: var(--white-key-width);
+            height: var(--white-key-height);
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 0 0 5px 5px;
+            z-index: 1;
+        }
+
+        /* 黑鍵組容器 */
+        .black-group {
+            position: absolute;
+            display: flex;
+            cursor: pointer;
+            transition: transform 0.2s;
+            z-index: 2;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .black-group:hover { transform: scale(1.05); }
+
+        .black-key {
+            width: var(--black-key-width);
+            height: var(--black-key-height);
+            background: #000;
+            margin: 0 2px;
+            border-radius: 0 0 3px 3px;
+        }
+
+        /* 位置計算 */
+        .group-2 { left: calc(10px + var(--white-key-width) * 0.7); }
+        .group-3 { left: calc(10px + var(--white-key-width) * 3.7); }
+        .octave-2 { transform: translateX(calc(var(--white-key-width) * 7)); }
+
+        /* 回饋顏色 */
+        .correct { background-color: rgba(76, 175, 80, 0.6) !important; }
+        .wrong { background-color: rgba(244, 67, 54, 0.6) !important; }
+
+        .btn-reset {
+            margin-top: 30px;
+            padding: 10px 25px;
+            font-size: 1rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>鋼琴黑鍵大冒險 🎹</h1>
+    <div class="score-board">分數: <span id="score">0</span></div>
+    <div class="instructions" id="mission">讀取中...</div>
+
+    <div class="piano-container">
+        <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
+        <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
+        
+        <div class="black-group group-2" onclick="checkAnswer(2, this)">
+            <div class="black-key"></div><div class="black-key"></div>
+        </div>
+        <div class="black-group group-3" onclick="checkAnswer(3, this)">
+            <div class="black-key"></div><div class="black-key"></div><div class="black-key"></div>
+        </div>
+
+        <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
+        <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
+        
+        <div class="black-group group-2 octave-2" onclick="checkAnswer(2, this)">
+            <div class="black-key"></div><div class="black-key"></div>
+        </div>
+        <div class="black-group group-3 octave-2" onclick="checkAnswer(3, this)">
+            <div class="black-key"></div><div class="black-key"></div><div class="black-key"></div>
+        </div>
+    </div>
+
+    <button class="btn-reset" onclick="nextRound()">下一題</button>
+
+    <script>
+        let score = 0;
+        let currentTarget = 2; // 2 或 3
+
+        function nextRound() {
+            // 清除之前的顏色
+            const groups = document.querySelectorAll('.black-group');
+            groups.forEach(g => {
+                g.classList.remove('correct', 'wrong');
+            });
+
+            // 隨機決定目標是 2 還是 3
+            currentTarget = Math.random() > 0.5 ? 2 : 3;
+            const missionText = currentTarget === 2 ? "🏠 請點擊所有的『2 個黑鍵』(小房子)！" : "🏰 請點擊所有的『3 個黑鍵』(大房子)！";
+            document.getElementById('mission').innerText = missionText;
+        }
+
+        function checkAnswer(num, element) {
+            if (element.classList.contains('correct') || element.classList.contains('wrong')) return;
+
+            if (num === currentTarget) {
+                element.classList.add('correct');
+                score += 10;
+                document.getElementById('score').innerText = score;
+                if (document.querySelectorAll('.correct').length === 2) {
+                    setTimeout(() => {
+                        alert("好棒！你找對了所有的" + (currentTarget === 2 ? "小房子" : "大房子") + "！");
+                        nextRound();
+                    }, 300);
+                }
+            } else {
+                element.classList.add('wrong');
+                score = Math.max(0, score - 5);
+                document.getElementById('score').innerText = score;
+            }
+        }
+
+        // 初始化第一題
+        nextRound();
+    </script>
+</body>
+</html>
