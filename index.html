@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鋼琴黑鍵大冒險 🎹 Mobile Burst</title>
+    <title>鋼琴黑鍵大冒險 🎹 Firework Pro</title>
     <style>
         :root {
             --white-key-width: 52px; 
@@ -32,8 +32,8 @@
 
         .score-board { font-size: 1.8rem; margin-bottom: 8px; color: #d35400; font-weight: bold; }
         .instructions { 
-            font-size: 1.1rem; margin-bottom: 15px; color: #2c3e50; font-weight: bold; 
-            background: white; padding: 10px 20px; border-radius: 50px; 
+            font-size: 1.2rem; margin-bottom: 15px; color: #2c3e50; font-weight: bold; 
+            background: white; padding: 10px 25px; border-radius: 50px; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 3px solid #4CAF50;
             text-align: center;
             max-width: 90vw;
@@ -80,22 +80,14 @@
         }
 
         .group-2 .black-key { margin: 0 calc(var(--gap-group-2) / 2); }
-        .group-2 { 
-            left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset)); 
-        }
+        .group-2 { left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset)); }
 
         .group-3 .black-key { margin: 0 calc(var(--gap-group-3) / 2); }
-        .group-3 { 
-            left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) + (var(--gap-group-3) / 2)) + var(--right-offset)); 
-        }
+        .group-3 { left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) + (var(--gap-group-3) / 2)) + var(--right-offset)); }
 
-        .octave-2-low { 
-            left: calc(var(--container-padding) + (var(--white-key-width) * 8) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset)); 
-        }
+        .octave-2-low { left: calc(var(--container-padding) + (var(--white-key-width) * 8) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset)); }
 
-        .last-group-3 .black-key { 
-            margin: 0 calc(var(--gap-group-3-last) / 2); 
-        }
+        .last-group-3 .black-key { margin: 0 calc(var(--gap-group-3-last) / 2); }
         .last-group-3 {
             right: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset));
             left: auto; 
@@ -117,27 +109,30 @@
             font-weight: bold;
         }
 
-        /* --- 【新加入】煙花粒子樣式 --- */
+        /* --- 增大的煙花粒子 --- */
         .firework-particle {
             position: absolute;
-            width: 6px;
-            height: 6px;
+            width: 10px; /* 粒子變大 */
+            height: 10px;
             border-radius: 50%;
-            pointer-events: none; /* 粒子不接受點擊 */
-            z-index: 10; /* 確保粒子在最上層爆開 */
-            opacity: 0; /* 初始透明 */
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
         }
 
-        /* --- 【新加入】煙花爆炸動畫 --- */
-        @keyframes firework-burst {
+        /* --- 增強版爆炸動畫 (2秒) --- */
+        @keyframes firework-burst-large {
             0% {
-                transform: translate(-50%, -50%) scale(1); /* 從中心點開始 */
-                opacity: 1; /* 完全不透明 */
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            15% {
+                opacity: 1;
             }
             100% {
-                /* 飛散到指定位置，並縮小消散 */
-                transform: translate(var(--x), var(--y)) scale(0); 
-                opacity: 0; /* 變透明 */
+                /* 飛得更遠 (var(--x) 和 var(--y) 在 JS 設定) */
+                transform: translate(var(--x), var(--y)) scale(0.2); 
+                opacity: 0;
             }
         }
     </style>
@@ -145,7 +140,7 @@
 <body>
 
     <div class="score-board">得分: <span id="score">0</span></div>
-    <div class="instructions" id="mission">目標載入中...</div>
+    <div class="instructions" id="mission">載入中...</div>
 
     <div class="piano-container">
         <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
@@ -165,14 +160,16 @@
         </div>
     </div>
 
-    <button class="btn-reset" onclick="nextRound()">下一題</button>
+    <button class="btn-reset" onclick="nextRound()">換一題</button>
 
     <script>
         let score = 0;
         let currentTarget = 2;
         let correctClicked = 0;
+        let isTransitioning = false; // 防止連續點擊進入多次下一題
 
         function nextRound() {
+            isTransitioning = false;
             document.querySelectorAll('.black-group').forEach(g => g.classList.remove('correct', 'wrong'));
             correctClicked = 0;
             currentTarget = Math.random() > 0.5 ? 2 : 3;
@@ -183,67 +180,69 @@
         }
 
         function checkAnswer(num, element) {
-            if (element.classList.contains('correct') || element.classList.contains('wrong')) return;
+            if (isTransitioning || element.classList.contains('correct') || element.classList.contains('wrong')) return;
+
             if (num === currentTarget) {
-                // 回答正確：加入「煙花」效果
                 element.classList.add('correct');
-                createFireworkBurst(element); // 【新呼叫】觸發煙花爆炸
+                createBigFirework(element); // 觸發大煙花
 
                 score += 10;
                 correctClicked++;
                 document.getElementById('score').innerText = score;
+
+                // 如果找齊了兩個
                 if (correctClicked === 2) {
-                    setTimeout(() => { alert("答對了！"); nextRound(); }, 300); // 稍微延遲 alert，讓煙花爆完
+                    isTransitioning = true;
+                    // 煙花持續 2 秒後自動下一題，移除 alert
+                    setTimeout(() => {
+                        nextRound();
+                    }, 2200); 
                 }
             } else {
-                // 回答錯誤
                 element.classList.add('wrong');
                 score = Math.max(0, score - 5);
                 document.getElementById('score').innerText = score;
             }
         }
 
-        /* --- 【新加入】生成煙花爆炸粒子的 JavaScript 函數 --- */
-        function createFireworkBurst(element) {
+        function createBigFirework(element) {
             const pianoContainer = document.querySelector('.piano-container');
-            const elementRect = element.getBoundingClientRect(); // 獲取琴鍵組的位置
-            const containerRect = pianoContainer.getBoundingClientRect(); // 獲取鋼琴容器的位置
+            const elementRect = element.getBoundingClientRect();
+            const containerRect = pianoContainer.getBoundingClientRect();
 
-            // 計算粒子爆炸的中心點（琴鍵組的中心）
             const centerX = elementRect.left + elementRect.width / 2 - containerRect.left;
             const centerY = elementRect.top + elementRect.height / 2 - containerRect.top;
 
-            const particleCount = 12; // 粒子數量
+            const particleCount = 20; // 粒子數量增加
 
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
                 particle.classList.add('firework-particle');
                 
-                // 設置粒子的初始位置在中心點
                 particle.style.left = centerX + 'px';
                 particle.style.top = centerY + 'px';
 
-                // 生成粒子飛散的隨機 x、y 距離和顏色
-                const translateX = (Math.random() - 0.5) * 100; // 飛散範圍 -50 到 50 px
-                const translateY = (Math.random() - 0.5) * 100; // 飛散範圍 -50 到 50 px
-                const colors = ['#FFD700', '#FFFFE0', '#FFA500']; // 金色、亮黃色、橘色
+                // 飛散距離大大增加 (150-300px)
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 150 + Math.random() * 150;
+                const translateX = Math.cos(angle) * distance;
+                const translateY = Math.sin(angle) * distance;
+
+                const colors = ['#FF4444', '#FFD700', '#00FF00', '#00FFFF', '#FF00FF', '#FFFFFF'];
                 const color = colors[Math.floor(Math.random() * colors.length)];
                 
-                // 將飛散距離和顏色通過 CSS 變數傳遞給 CSS
                 particle.style.setProperty('--x', translateX + 'px');
                 particle.style.setProperty('--y', translateY + 'px');
                 particle.style.backgroundColor = color;
                 
-                // 設置微微隨機的動畫延遲，增加自然感
-                particle.style.animationDelay = (Math.random() * 0.2) + 's'; 
-                particle.style.animation = 'firework-burst 0.8s ease-out forwards'; // 應用爆炸動畫
+                // 動畫時長設定為 2s
+                particle.style.animation = 'firework-burst-large 2s cubic-bezier(0.1, 0.5, 0.3, 1) forwards';
 
-                pianoContainer.appendChild(particle); // 將粒子加入鋼琴容器中
+                pianoContainer.appendChild(particle);
 
-                // 動畫結束後（0.8秒動畫 + 0.2秒延遲），從 DOM 中移除粒子，避免過多粒子卡頓
                 setTimeout(() => {
                     particle.remove();
-                }, 1000); 
+                }, 2000); 
             }
         }
 
