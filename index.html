@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鋼琴黑鍵大冒險 🎹 Firework Turbo</title>
+    <title>鋼琴黑鍵大冒險 🎹 Firework Turbo Pro</title>
     <style>
         :root {
+            /* 沿用你的黃金比例尺寸 */
             --white-key-width: 52px; 
             --white-key-height: 170px;
             --black-key-width: 34px;
@@ -14,7 +15,7 @@
             --gap-group-3: 22px;  
             --gap-group-3-last: 21px;
             --container-padding: 12px; 
-            --right-offset: 12px; 
+            --right-offset: 18px; /* 右偏移量 */
         }
 
         body {
@@ -22,7 +23,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #0f172a; /* 深色背景讓煙花更明顯 */
+            background-color: #0f172a; 
             color: white;
             margin: 0;
             padding: 10px;
@@ -69,7 +70,7 @@
             display: flex;
             cursor: pointer;
             z-index: 2;
-            top: calc(var(--container-padding) - 3px); 
+            top: calc(var(--container-padding) - 5px); /* 移高設定 */
             padding: 3px;
             border-radius: 5px;
         }
@@ -82,12 +83,15 @@
             box-shadow: 2px 3px 6px rgba(0,0,0,0.6);
         }
 
-        /* 定位邏輯維持 */
+        /* 定位邏輯 */
         .group-2 .black-key { margin: 0 calc(var(--gap-group-2) / 2); }
         .group-2 { left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset)); }
+        
         .group-3 .black-key { margin: 0 calc(var(--gap-group-3) / 2); }
         .group-3 { left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) + (var(--gap-group-3) / 2)) + var(--right-offset)); }
+        
         .octave-2-low { left: calc(var(--container-padding) + (var(--white-key-width) * 8) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset)); }
+        
         .last-group-3 .black-key { margin: 0 calc(var(--gap-group-3-last) / 2); }
         .last-group-3 {
             right: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset));
@@ -97,7 +101,6 @@
         .correct { background-color: rgba(34, 197, 94, 0.5) !important; box-shadow: 0 0 20px #22c55e; }
         .wrong { background-color: rgba(239, 68, 68, 0.5) !important; box-shadow: 0 0 20px #ef4444; }
 
-        /* --- 強力煙花粒子 --- */
         .firework-particle {
             position: absolute;
             width: 8px;
@@ -106,24 +109,22 @@
             pointer-events: none;
             z-index: 100;
             opacity: 0;
-            box-shadow: 0 0 10px currentColor; /* 霓虹發光 */
+            box-shadow: 0 0 10px currentColor;
         }
 
         @keyframes firework-mega-burst {
             0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
             50% { opacity: 1; }
             100% { 
-                /* 加上微微的下墜 gravity */
-                transform: translate(var(--x), calc(var(--y) + 50px)) scale(0); 
+                transform: translate(var(--x), calc(var(--y) + 60px)) scale(0); 
                 opacity: 0; 
             }
         }
 
-        /* --- 勝利畫面 --- */
         #victory-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(15, 23, 42, 0.95);
             display: none;
             flex-direction: column;
             justify-content: center;
@@ -134,7 +135,7 @@
         #victory-screen h2 { font-size: 3rem; color: #fbbf24; margin-bottom: 20px; }
         .btn-restart {
             padding: 15px 40px; font-size: 1.5rem; background: #22c55e; color: white;
-            border: none; border-radius: 50px; cursor: pointer;
+            border: none; border-radius: 50px; cursor: pointer; font-weight: bold;
         }
     </style>
 </head>
@@ -166,15 +167,16 @@
     </div>
 
     <div id="victory-screen">
-        <h2>🎉 太棒了！ 🎉<br>完成一個回合！</h2>
-        <button class="btn-restart" onclick="resetRound()">再玩一回合</button>
+        <h2>🎉 太棒了！ 🎉<br>挑戰成功！</h2>
+        <button class="btn-restart" onclick="resetRound()">再玩一次</button>
     </div>
 
     <script>
         let score = 0;
         let roundProgress = 0;
         const maxRound = 10;
-        let currentTarget = 2;
+        let currentTarget = null;
+        let consecutiveCount = 0; // 用於追蹤連續次數
         let correctClicked = 0;
         let isTransitioning = false;
 
@@ -183,13 +185,29 @@
             document.querySelectorAll('.black-group').forEach(g => g.classList.remove('correct', 'wrong'));
             correctClicked = 0;
             
-            // 回合檢查
             if (roundProgress >= maxRound) {
                 document.getElementById('victory-screen').style.display = 'flex';
                 return;
             }
 
-            currentTarget = Math.random() > 0.5 ? 2 : 3;
+            // --- 防重複邏輯 ---
+            let nextTarget;
+            if (currentTarget !== null && consecutiveCount >= 2) {
+                // 如果已經連續兩次一樣，強制切換
+                nextTarget = (currentTarget === 2) ? 3 : 2;
+            } else {
+                // 否則隨機決定
+                nextTarget = Math.random() > 0.5 ? 2 : 3;
+            }
+
+            // 更新連續計數器
+            if (nextTarget === currentTarget) {
+                consecutiveCount++;
+            } else {
+                currentTarget = nextTarget;
+                consecutiveCount = 1;
+            }
+
             const missionDisplay = document.getElementById('mission');
             missionDisplay.innerHTML = currentTarget === 2 ? 
                 "🏠 找出所有的 <span style='color:#fbbf24'>『2個黑鍵』</span>" : 
@@ -199,6 +217,8 @@
         function resetRound() {
             score = 0;
             roundProgress = 0;
+            consecutiveCount = 0;
+            currentTarget = null;
             document.getElementById('score').innerText = score;
             document.getElementById('progress').innerText = roundProgress;
             document.getElementById('victory-screen').style.display = 'none';
@@ -210,7 +230,7 @@
 
             if (num === currentTarget) {
                 element.classList.add('correct');
-                triggerMegaFirework(element); // 觸發超強煙花
+                triggerMegaFirework(element);
 
                 score += 10;
                 correctClicked++;
@@ -220,10 +240,7 @@
                     isTransitioning = true;
                     roundProgress++;
                     document.getElementById('progress').innerText = roundProgress;
-
-                    setTimeout(() => {
-                        nextRound();
-                    }, 2200); 
+                    setTimeout(nextRound, 2200); 
                 }
             } else {
                 element.classList.add('wrong');
@@ -236,35 +253,26 @@
             const piano = document.getElementById('piano');
             const rect = element.getBoundingClientRect();
             const pRect = piano.getBoundingClientRect();
-
             const cx = rect.left + rect.width / 2 - pRect.left;
             const cy = rect.top + rect.height / 2 - pRect.top;
 
-            const particles = 40; // 強力 40 顆
-
+            const particles = 40; 
             for (let i = 0; i < particles; i++) {
                 const p = document.createElement('div');
                 p.className = 'firework-particle';
-                
-                // 彩虹色系
                 const colors = ['#ff0000', '#00ff00', '#00ffff', '#ffff00', '#ff00ff', '#ffffff', '#38bdf8'];
                 const color = colors[Math.floor(Math.random() * colors.length)];
-                
                 p.style.left = cx + 'px';
                 p.style.top = cy + 'px';
                 p.style.color = color;
                 p.style.backgroundColor = color;
-
                 const angle = Math.random() * Math.PI * 2;
                 const dist = 100 + Math.random() * 250;
                 const tx = Math.cos(angle) * dist;
                 const ty = Math.sin(angle) * dist;
-
                 p.style.setProperty('--x', tx + 'px');
                 p.style.setProperty('--y', ty + 'px');
-                
                 p.style.animation = `firework-mega-burst ${1.5 + Math.random() * 1}s cubic-bezier(0, 0.9, 0.3, 1) forwards`;
-
                 piano.appendChild(p);
                 setTimeout(() => p.remove(), 2500);
             }
