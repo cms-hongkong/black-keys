@@ -6,10 +6,10 @@
     <title>鋼琴黑鍵大冒險 🎹</title>
     <style>
         :root {
-            --white-key-width: 60px;
-            --white-key-height: 200px;
-            --black-key-width: 40px;
-            --black-key-height: 120px;
+            --white-key-width: 70px; /* 稍微加寬白鍵，讓整體更協調 */
+            --white-key-height: 220px;
+            --black-key-width: 50px; /* **修正：加闊黑鍵** (原為 40px) */
+            --black-key-height: 140px; /* **修正：加長黑鍵** (原為 120px) */
         }
 
         body {
@@ -20,20 +20,21 @@
             background-color: #f0f8ff;
             margin: 0;
             padding: 20px;
+            user-select: none; /* 防止小朋友在點擊時意外選取文字 */
         }
 
         h1 { color: #333; margin-bottom: 10px; }
-        .instructions { font-size: 1.2rem; margin-bottom: 20px; color: #555; font-weight: bold; }
-        .score-board { font-size: 1.5rem; margin-bottom: 10px; color: #ff6600; }
+        .instructions { font-size: 1.3rem; margin-bottom: 20px; color: #555; font-weight: bold; background: white; padding: 10px 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .score-board { font-size: 1.8rem; margin-bottom: 15px; color: #ff6600; font-weight: bold; }
 
         /* 鋼琴容器 */
         .piano-container {
             display: flex;
             position: relative;
-            background: #333;
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            background: #222; /* 更深的底色 */
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
             overflow-x: auto;
             max-width: 95vw;
         }
@@ -43,51 +44,62 @@
             width: var(--white-key-width);
             height: var(--white-key-height);
             background: white;
-            border: 1px solid #ccc;
-            border-radius: 0 0 5px 5px;
+            border: 1px solid #dcdcdc;
+            border-radius: 0 0 6px 6px;
             z-index: 1;
+            box-sizing: border-radius;
         }
 
-        /* 黑鍵組容器 */
+        /* 黑鍵組容器 - **重要修正：移除 hover 縮放，避免抖動** */
         .black-group {
             position: absolute;
             display: flex;
             cursor: pointer;
-            transition: transform 0.2s;
             z-index: 2;
-            padding: 5px;
+            padding: 5px; /* 增加點擊區域 */
             border-radius: 8px;
+            top: 15px; /* 讓黑鍵頂部與鋼琴容器對齊 */
         }
 
-        .black-group:hover { transform: scale(1.05); }
+        /* 替代的 Hover 效果：淡淡的陰影，不影響位置 */
+        .black-group:hover .black-key {
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
 
         .black-key {
             width: var(--black-key-width);
             height: var(--black-key-height);
             background: #000;
-            margin: 0 2px;
-            border-radius: 0 0 3px 3px;
+            margin: 0 3px; /* 微調黑鍵間距 */
+            border-radius: 0 0 4px 4px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5); /* 增加立體感 */
         }
 
-        /* 位置計算 */
-        .group-2 { left: calc(10px + var(--white-key-width) * 0.7); }
-        .group-3 { left: calc(10px + var(--white-key-width) * 3.7); }
+        /* **重要修正：重新計算位置，適應新的寬度** */
+        /* 計算公式解釋：(白鍵序號 - 1) * 白鍵寬度 + 黑鍵組與白鍵的相對偏移 */
+        .group-2 { left: calc(15px + (1 - 1) * var(--white-key-width) + var(--white-key-width) * 0.65); } /* 在 C 和 D 之間 */
+        .group-3 { left: calc(15px + (4 - 1) * var(--white-key-width) + var(--white-key-width) * 0.65); } /* 在 F 和 G 之間 */
+        
+        /* 第二個八度偏移 */
         .octave-2 { transform: translateX(calc(var(--white-key-width) * 7)); }
 
-        /* 回饋顏色 */
-        .correct { background-color: rgba(76, 175, 80, 0.6) !important; }
-        .wrong { background-color: rgba(244, 67, 54, 0.6) !important; }
+        /* 回饋顏色 - 增加不透明度 */
+        .correct { background-color: rgba(76, 175, 80, 0.8) !important; border-radius: 8px; }
+        .wrong { background-color: rgba(244, 67, 54, 0.8) !important; border-radius: 8px; }
 
         .btn-reset {
-            margin-top: 30px;
-            padding: 10px 25px;
-            font-size: 1rem;
+            margin-top: 35px;
+            padding: 12px 30px;
+            font-size: 1.1rem;
             background: #4CAF50;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: background 0.2s;
         }
+        .btn-reset:hover { background: #45a049; }
     </style>
 </head>
 <body>
@@ -123,6 +135,8 @@
     <script>
         let score = 0;
         let currentTarget = 2; // 2 或 3
+        let correctClicked = 0; // 當前回合點擊正確的數量
+        const totalGroupsPerType = 2; // 畫面上一共有2組2鍵、2組3鍵
 
         function nextRound() {
             // 清除之前的顏色
@@ -130,30 +144,45 @@
             groups.forEach(g => {
                 g.classList.remove('correct', 'wrong');
             });
+            correctClicked = 0;
 
-            // 隨機決定目標是 2 還是 3
-            currentTarget = Math.random() > 0.5 ? 2 : 3;
+            // 隨機決定目標是 2 還是 3，並確保與上一題不同
+            let nextTarget;
+            do {
+                nextTarget = Math.random() > 0.5 ? 2 : 3;
+            } while (nextTarget === currentTarget);
+            currentTarget = nextTarget;
+
             const missionText = currentTarget === 2 ? "🏠 請點擊所有的『2 個黑鍵』(小房子)！" : "🏰 請點擊所有的『3 個黑鍵』(大房子)！";
             document.getElementById('mission').innerText = missionText;
         }
 
         function checkAnswer(num, element) {
+            // 如果已經被點擊過（不論對錯），就不重複執行
             if (element.classList.contains('correct') || element.classList.contains('wrong')) return;
 
             if (num === currentTarget) {
+                // 回答正確
                 element.classList.add('correct');
                 score += 10;
+                correctClicked++;
                 document.getElementById('score').innerText = score;
-                if (document.querySelectorAll('.correct').length === 2) {
+                
+                // 檢查是否找齊了所有目標組
+                if (correctClicked === totalGroupsPerType) {
                     setTimeout(() => {
-                        alert("好棒！你找對了所有的" + (currentTarget === 2 ? "小房子" : "大房子") + "！");
+                        // 播放一個簡單的成功音效（選擇性，需要瀏覽器支援）
+                        // const audio = new Audio('path/to/success.mp3'); audio.play();
+                        alert("好棒！你找對了所有的" + (currentTarget === 2 ? "小房子" : "大房子") + "！準備下一題囉！");
                         nextRound();
                     }, 300);
                 }
             } else {
+                // 回答錯誤
                 element.classList.add('wrong');
                 score = Math.max(0, score - 5);
                 document.getElementById('score').innerText = score;
+                // 可以在這裡加上簡單的錯誤音效
             }
         }
 
