@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鋼琴黑鍵大冒險 🎹 Mobile</title>
+    <title>鋼琴黑鍵大冒險 🎹 Mobile Pro</title>
     <style>
         :root {
-            /* 針對手機橫置縮小的尺寸 */
             --white-key-width: 55px;
             --white-key-height: 180px;
             --black-key-width: 35px;
             --black-key-height: 110px;
             
-            /* 按比例縮小的間距與邊距 */
             --gap-group-2: 24px;  
             --gap-group-3: 22px;  
+            /* 修正：最右邊一組 3 黑鍵間距 -1px */
+            --gap-group-3-last: 21px; 
+            
             --container-padding: 12px; 
             --right-offset: 12px; 
         }
@@ -28,7 +29,7 @@
             margin: 0;
             padding: 10px;
             user-select: none;
-            touch-action: manipulation; /* 優化移動端點擊 */
+            touch-action: manipulation;
         }
 
         .score-board { font-size: 1.8rem; margin-bottom: 10px; color: #d35400; font-weight: bold; }
@@ -39,7 +40,7 @@
             text-align: center;
         }
 
-        /* 鋼琴容器：寬度會自動適應 14 個鍵 */
+        /* 鋼琴容器 */
         .piano-container {
             display: flex;
             position: relative;
@@ -48,6 +49,8 @@
             border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
             border-bottom: 6px solid #000;
+            /* 修正：整個琴向右移 5px */
+            margin-left: 5px; 
         }
 
         .white-key {
@@ -65,7 +68,7 @@
             display: flex;
             cursor: pointer;
             z-index: 2;
-            top: calc(var(--container-padding) - 1px);
+            top: calc(var(--container-padding) - 3px); /* 統一微調高度 */
             padding: 3px;
             border-radius: 5px;
         }
@@ -78,24 +81,27 @@
             box-shadow: 2px 3px 6px rgba(0,0,0,0.6);
         }
 
-        /* --- 左側第一組 (2黑鍵) --- */
+        /* --- 左側第一組 (2個) --- */
         .group-2 .black-key { margin: 0 calc(var(--gap-group-2) / 2); }
         .group-2 { 
             left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset)); 
         }
 
-        /* --- 中間第一組 (3黑鍵) --- */
+        /* --- 中間第一組 (3個) --- */
         .group-3 .black-key { margin: 0 calc(var(--gap-group-3) / 2); }
         .group-3 { 
             left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) + (var(--gap-group-3) / 2)) + var(--right-offset)); 
         }
 
-        /* --- 左邊第二組 (2黑鍵) --- */
+        /* --- 左邊第二組 (2個) --- */
         .octave-2-low { 
             left: calc(var(--container-padding) + (var(--white-key-width) * 8) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset)); 
         }
 
-        /* --- 【對稱修正】最右邊最後一組 (3黑鍵) --- */
+        /* --- 【修正】最右邊最後一組 (3個)：間距減小並保持右對稱 --- */
+        .last-group-3 .black-key { 
+            margin: 0 calc(var(--gap-group-3-last) / 2); 
+        }
         .last-group-3 {
             right: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) + (var(--gap-group-2) / 2)) + var(--right-offset));
             left: auto; 
@@ -121,7 +127,7 @@
 <body>
 
     <div class="score-board">得分: <span id="score">0</span></div>
-    <div class="instructions" id="mission">請橫置手機玩耍 📱</div>
+    <div class="instructions" id="mission">目標載入中...</div>
 
     <div class="piano-container">
         <div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div><div class="white-key"></div>
@@ -166,7 +172,7 @@
                 correctClicked++;
                 document.getElementById('score').innerText = score;
                 if (correctClicked === 2) {
-                    setTimeout(() => { alert("答對了！"); nextRound(); }, 200);
+                    setTimeout(() => { alert("正確！位置找得非常精準！"); nextRound(); }, 200);
                 }
             } else {
                 element.classList.add('wrong');
