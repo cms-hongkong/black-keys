@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鋼琴黑鍵大冒險 🎹 精密位移校正版</title>
+    <title>鋼琴黑鍵大冒險 🎹 精密位移最終校正版</title>
     <style>
         :root {
-            /* 1. 基礎尺寸 */
+            /* 基礎尺寸 */
             --white-key-width: 52px;
             --white-key-height: 170px;
             --black-key-width: 34px;
@@ -14,7 +14,7 @@
             --container-padding: 12px;
             --piano-margin-l: 40px; 
             
-            /* 2. 組別位移參數 */
+            /* 群組位移量 */
             --shift-right: 3px; 
             --shift-left: 3px;
         }
@@ -83,26 +83,26 @@
         }
 
         /* ----------------------------------------------------
-           🎯 核心位移邏輯 (嚴格執行)
+           🎯 核心精密位移 (Individual & Group Offsets)
         ---------------------------------------------------- */
 
-        /* 第 1 組 (2鍵) - 向右移 3px */
+        /* 第 1 組 (2鍵) - 整體右移 3px，第 2 鍵再右移 3px */
         .group-1 { left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) / 2) + var(--shift-right)); }
         .group-1 .k1 { left: -3px; }
-        .group-1 .k2 { left: calc(var(--white-key-width) - 8px); }
+        .group-1 .k2 { left: calc(var(--white-key-width) - 5px); } /* 從 -8px 變成 -5px */
 
-        /* 第 2 組 (3鍵) - 向右移 3px */
+        /* 第 2 組 (3鍵) - 整體右移 3px，第 2, 3 鍵再右移 3px */
         .group-2 { left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) / 2) + var(--shift-right)); }
         .group-2 .k1 { left: -3px; }
-        .group-2 .k2 { left: calc(var(--white-key-width) - 5px); }
-        .group-2 .k3 { left: calc((var(--white-key-width) * 2) - 9px); }
+        .group-2 .k2 { left: calc(var(--white-key-width) - 2px); }      /* 從 -5px 變成 -2px */
+        .group-2 .k3 { left: calc((var(--white-key-width) * 2) - 6px); } /* 從 -9px 變成 -6px */
 
-        /* 第 3 組 (2鍵) - 向右移 3px */
+        /* 第 3 組 (2鍵) - 整體右移 3px，第 2 鍵再右移 3px */
         .group-3 { left: calc(var(--container-padding) + (var(--white-key-width) * 8) - (var(--black-key-width) / 2) + var(--shift-right)); }
         .group-3 .k1 { left: -3px; }
-        .group-3 .k2 { left: calc(var(--white-key-width) - 8px); }
+        .group-3 .k2 { left: calc(var(--white-key-width) - 5px); } /* 從 -8px 變成 -5px */
 
-        /* 第 4 組 (3鍵) - 保持向左移 3px (不准改回去!) */
+        /* 第 4 組 (3鍵) - 保持整體左移 3px，內部維持 (5, 5, 3) */
         .group-4 { left: calc(var(--container-padding) + (var(--white-key-width) * 11) - (var(--black-key-width) / 2) - var(--shift-left)); }
         .group-4 .k1 { left: 5px; }
         .group-4 .k2 { left: calc(var(--white-key-width) + 5px); }
@@ -158,11 +158,10 @@
 
     <div id="victory-screen">
         <h2 style="font-size: 3rem; color: #fbbf24;">🎉 挑戰成功 🎉</h2>
-        <button onclick="resetRound()" style="margin-top:20px; padding: 18px 50px; font-size: 1.5rem; background: #22c55e; color: white; border: none; border-radius: 50px; cursor: pointer;">再玩一次</button>
+        <button onclick="resetRound()" style="margin-top:20px; padding: 18px 50px; font-size: 1.6rem; background: #22c55e; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold;">再玩一次</button>
     </div>
 
     <script>
-        // ... (JS 部分保持不變，核心在於上面的 CSS 定位)
         let score = 0; let roundProgress = 0; let currentTarget = null; let correctClicked = 0; let isTransitioning = false;
         function nextRound() {
             isTransitioning = false;
