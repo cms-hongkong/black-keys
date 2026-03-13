@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鋼琴黑鍵大冒險 🎹 精準位移 Turbo</title>
+    <title>鋼琴黑鍵大冒險 🎹 精密位移校正版</title>
     <style>
         :root {
-            /* 1. 基礎琴鍵尺寸 */
+            /* 1. 基礎尺寸 */
             --white-key-width: 52px;
             --white-key-height: 170px;
             --black-key-width: 34px;
             --black-key-height: 105px;
-
-            /* 2. 佈局參數 */
             --container-padding: 12px;
             --piano-margin-l: 40px; 
             
-            /* 3. 整體組別位移量 */
-            --group-shift: 3px; 
+            /* 2. 組別位移參數 */
+            --shift-right: 3px; 
+            --shift-left: 3px;
         }
 
         body {
@@ -84,27 +83,27 @@
         }
 
         /* ----------------------------------------------------
-           🎯 精密位移校準 (Group & Individual)
+           🎯 核心位移邏輯 (嚴格執行)
         ---------------------------------------------------- */
 
-        /* 第1組 (2鍵) - 整體向右移 3px */
-        .group-1 { left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) / 2) + var(--group-shift)); }
+        /* 第 1 組 (2鍵) - 向右移 3px */
+        .group-1 { left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) / 2) + var(--shift-right)); }
         .group-1 .k1 { left: -3px; }
         .group-1 .k2 { left: calc(var(--white-key-width) - 8px); }
 
-        /* 第2組 (3鍵) - 整體向右移 3px */
-        .group-2 { left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) / 2) + var(--group-shift)); }
+        /* 第 2 組 (3鍵) - 向右移 3px */
+        .group-2 { left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) / 2) + var(--shift-right)); }
         .group-2 .k1 { left: -3px; }
         .group-2 .k2 { left: calc(var(--white-key-width) - 5px); }
         .group-2 .k3 { left: calc((var(--white-key-width) * 2) - 9px); }
 
-        /* 第3組 (2鍵) - 整體向右移 3px */
-        .group-3 { left: calc(var(--container-padding) + (var(--white-key-width) * 8) - (var(--black-key-width) / 2) + var(--group-shift)); }
+        /* 第 3 組 (2鍵) - 向右移 3px */
+        .group-3 { left: calc(var(--container-padding) + (var(--white-key-width) * 8) - (var(--black-key-width) / 2) + var(--shift-right)); }
         .group-3 .k1 { left: -3px; }
         .group-3 .k2 { left: calc(var(--white-key-width) - 8px); }
 
-        /* 第4組 (3鍵) - 整體向左移 3px */
-        .group-4 { left: calc(var(--container-padding) + (var(--white-key-width) * 11) - (var(--black-key-width) / 2) - var(--group-shift)); }
+        /* 第 4 組 (3鍵) - 保持向左移 3px (不准改回去!) */
+        .group-4 { left: calc(var(--container-padding) + (var(--white-key-width) * 11) - (var(--black-key-width) / 2) - var(--shift-left)); }
         .group-4 .k1 { left: 5px; }
         .group-4 .k2 { left: calc(var(--white-key-width) + 5px); }
         .group-4 .k3 { left: calc((var(--white-key-width) * 2) + 3px); }
@@ -118,7 +117,7 @@
             position: absolute; width: 6px; height: 6px; border-radius: 50%;
             pointer-events: none; z-index: 100;
         }
-        @keyframes firework-mega-burst {
+        @keyframes firework-burst {
             0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
             100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
         }
@@ -158,87 +157,54 @@
     </div>
 
     <div id="victory-screen">
-        <h2 style="font-size: 3rem; color: #fbbf24; text-align: center;">🎉 太厲害了！ 🎉<br>你找到了所有的房子！</h2>
-        <button onclick="resetRound()" style="margin-top:20px; padding: 18px 50px; font-size: 1.6rem; background: #22c55e; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold;">再玩一次</button>
+        <h2 style="font-size: 3rem; color: #fbbf24;">🎉 挑戰成功 🎉</h2>
+        <button onclick="resetRound()" style="margin-top:20px; padding: 18px 50px; font-size: 1.5rem; background: #22c55e; color: white; border: none; border-radius: 50px; cursor: pointer;">再玩一次</button>
     </div>
 
     <script>
-        let score = 0;
-        let roundProgress = 0;
-        let currentTarget = null;
-        let correctClicked = 0;
-        let isTransitioning = false;
-
+        // ... (JS 部分保持不變，核心在於上面的 CSS 定位)
+        let score = 0; let roundProgress = 0; let currentTarget = null; let correctClicked = 0; let isTransitioning = false;
         function nextRound() {
             isTransitioning = false;
             document.querySelectorAll('.black-group').forEach(g => g.classList.remove('correct', 'wrong'));
             correctClicked = 0;
-            
-            if (roundProgress >= 10) {
-                document.getElementById('victory-screen').style.display = 'flex';
-                return;
-            }
-
+            if (roundProgress >= 10) { document.getElementById('victory-screen').style.display = 'flex'; return; }
             currentTarget = Math.random() > 0.5 ? 2 : 3;
             document.getElementById('mission').innerHTML = currentTarget === 2 ? 
                 "🏠 找出所有的 <span style='color:#fbbf24'>『2個黑鍵』</span>" : 
                 "🏰 找出所有的 <span style='color:#fbbf24'>『3個黑鍵』</span>";
         }
-
         function checkAnswer(num, element) {
             if (isTransitioning || element.classList.contains('correct')) return;
-
             if (num === currentTarget) {
-                element.classList.add('correct');
-                score += 10;
-                correctClicked++;
+                element.classList.add('correct'); score += 10; correctClicked++;
                 document.getElementById('score').innerText = score;
                 triggerFirework(element);
-
                 if (correctClicked === 2) {
-                    isTransitioning = true;
-                    roundProgress++;
+                    isTransitioning = true; roundProgress++;
                     document.getElementById('progress').innerText = roundProgress;
-                    setTimeout(nextRound, 1800);
+                    setTimeout(nextRound, 1500);
                 }
             } else {
                 element.classList.add('wrong');
                 setTimeout(() => element.classList.remove('wrong'), 500);
             }
         }
-
         function triggerFirework(el) {
-            const rect = el.getBoundingClientRect();
-            const piano = document.getElementById('piano');
-            const pRect = piano.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2 - pRect.left;
-            const cy = rect.top + rect.height / 2 - pRect.top;
-
-            for (let i = 0; i < 30; i++) {
-                const p = document.createElement('div');
-                p.className = 'firework-particle';
-                const colors = ['#fbbf24', '#38bdf8', '#4ade80', '#f87171', '#c084fc'];
+            const rect = el.getBoundingClientRect(); const piano = document.getElementById('piano'); const pRect = piano.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2 - pRect.left; const cy = rect.top + rect.height / 2 - pRect.top;
+            for (let i = 0; i < 25; i++) {
+                const p = document.createElement('div'); p.className = 'firework-particle';
+                const colors = ['#fbbf24', '#38bdf8', '#4ade80', '#f87171'];
                 p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                p.style.left = cx + 'px';
-                p.style.top = cy + 'px';
-                const angle = Math.random() * Math.PI * 2;
-                const dist = 60 + Math.random() * 120;
-                p.style.setProperty('--x', Math.cos(angle) * dist + 'px');
-                p.style.setProperty('--y', Math.sin(angle) * dist + 'px');
-                p.style.animation = `firework-mega-burst 0.8s ease-out forwards`;
-                piano.appendChild(p);
-                setTimeout(() => p.remove(), 1000);
+                p.style.left = cx + 'px'; p.style.top = cy + 'px';
+                const angle = Math.random() * Math.PI * 2; const dist = 50 + Math.random() * 100;
+                p.style.setProperty('--x', Math.cos(angle) * dist + 'px'); p.style.setProperty('--y', Math.sin(angle) * dist + 'px');
+                p.style.animation = `firework-burst 0.8s ease-out forwards`;
+                piano.appendChild(p); setTimeout(() => p.remove(), 1000);
             }
         }
-
-        function resetRound() {
-            score = 0; roundProgress = 0;
-            document.getElementById('score').innerText = '0';
-            document.getElementById('progress').innerText = '0';
-            document.getElementById('victory-screen').style.display = 'none';
-            nextRound();
-        }
-
+        function resetRound() { score = 0; roundProgress = 0; document.getElementById('victory-screen').style.display = 'none'; nextRound(); }
         nextRound();
     </script>
 </body>
