@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鋼琴黑鍵大冒險 🎹 精準尺寸版</title>
+    <title>鋼琴黑鍵大冒險 🎹 精準位移 Turbo</title>
     <style>
         :root {
             /* 1. 基礎琴鍵尺寸 */
@@ -14,7 +14,10 @@
 
             /* 2. 佈局參數 */
             --container-padding: 12px;
-            --piano-margin-l: 40px; /* 避開動態島 */
+            --piano-margin-l: 40px; 
+            
+            /* 3. 整體組別位移量 */
+            --group-shift: 3px; 
         }
 
         body {
@@ -33,13 +36,11 @@
 
         .header { display: flex; gap: 30px; margin-bottom: 15px; align-items: center; }
         .score-board { font-size: 1.8rem; color: #fbbf24; font-weight: bold; }
-        .progress-board { font-size: 1.2rem; color: #38bdf8; }
 
         .instructions { 
             font-size: 1.3rem; margin-bottom: 25px; color: #1e293b; font-weight: bold; 
             background: #f8fafc; padding: 12px 35px; border-radius: 50px; 
             box-shadow: 0 0 20px rgba(56, 189, 248, 0.4); border: 3px solid #38bdf8;
-            text-align: center; min-width: 320px;
         }
 
         .piano-container {
@@ -65,7 +66,6 @@
             flex-shrink: 0;
         }
 
-        /* 黑鍵組容器：定位在標準裂縫處 */
         .black-group {
             position: absolute;
             z-index: 2;
@@ -74,7 +74,6 @@
             cursor: pointer;
         }
 
-        /* 每一顆黑鍵：使用相對定位來處理微調 */
         .black-key {
             position: absolute;
             width: var(--black-key-width);
@@ -82,45 +81,44 @@
             background: linear-gradient(to bottom, #444 0%, #000 15%, #000 100%);
             border-radius: 0 0 4px 4px;
             box-shadow: 2px 3px 6px rgba(0,0,0,0.5);
-            transition: background 0.2s;
         }
 
         /* ----------------------------------------------------
-           🎯 精密黑鍵位移 (Individual Key Offsets)
+           🎯 精密位移校準 (Group & Individual)
         ---------------------------------------------------- */
 
-        /* 第1組 (2鍵) - 位於第1/2, 2/3白鍵縫隙 */
-        .group-1 { left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) / 2)); }
+        /* 第1組 (2鍵) - 整體向右移 3px */
+        .group-1 { left: calc(var(--container-padding) + var(--white-key-width) - (var(--black-key-width) / 2) + var(--group-shift)); }
         .group-1 .k1 { left: -3px; }
         .group-1 .k2 { left: calc(var(--white-key-width) - 8px); }
 
-        /* 第2組 (3鍵) - 位於第4/5, 5/6, 6/7白鍵縫隙 */
-        .group-2 { left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) / 2)); }
+        /* 第2組 (3鍵) - 整體向右移 3px */
+        .group-2 { left: calc(var(--container-padding) + (var(--white-key-width) * 4) - (var(--black-key-width) / 2) + var(--group-shift)); }
         .group-2 .k1 { left: -3px; }
         .group-2 .k2 { left: calc(var(--white-key-width) - 5px); }
         .group-2 .k3 { left: calc((var(--white-key-width) * 2) - 9px); }
 
-        /* 第3組 (2鍵) - 位於第8/9, 9/10白鍵縫隙 */
-        .group-3 { left: calc(var(--container-padding) + (var(--white-key-width) * 8) - (var(--black-key-width) / 2)); }
+        /* 第3組 (2鍵) - 整體向右移 3px */
+        .group-3 { left: calc(var(--container-padding) + (var(--white-key-width) * 8) - (var(--black-key-width) / 2) + var(--group-shift)); }
         .group-3 .k1 { left: -3px; }
         .group-3 .k2 { left: calc(var(--white-key-width) - 8px); }
 
-        /* 第4組 (3鍵) - 位於第11/12, 12/13, 13/14白鍵縫隙 */
-        .group-4 { left: calc(var(--container-padding) + (var(--white-key-width) * 11) - (var(--black-key-width) / 2)); }
+        /* 第4組 (3鍵) - 整體向左移 3px */
+        .group-4 { left: calc(var(--container-padding) + (var(--white-key-width) * 11) - (var(--black-key-width) / 2) - var(--group-shift)); }
         .group-4 .k1 { left: 5px; }
         .group-4 .k2 { left: calc(var(--white-key-width) + 5px); }
         .group-4 .k3 { left: calc((var(--white-key-width) * 2) + 3px); }
 
-        /* 狀態樣式 */
+        /* ---------------------------------------------------- */
+
         .correct .black-key { background: linear-gradient(to bottom, #22c55e, #166534) !important; box-shadow: 0 0 15px #22c55e; }
         .wrong .black-key { background: linear-gradient(to bottom, #ef4444, #991b1b) !important; box-shadow: 0 0 15px #ef4444; }
 
-        /* 煙火 */
         .firework-particle {
             position: absolute; width: 6px; height: 6px; border-radius: 50%;
             pointer-events: none; z-index: 100;
         }
-        @keyframes firework-burst {
+        @keyframes firework-mega-burst {
             0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
             100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
         }
@@ -136,7 +134,7 @@
 
     <div class="header">
         <div class="score-board">得分: <span id="score">0</span></div>
-        <div class="progress-board">進度: <span id="progress">0</span> / 10</div>
+        <div style="font-size: 1.2rem; color: #38bdf8;">進度: <span id="progress">0</span> / 10</div>
     </div>
 
     <div class="instructions" id="mission">載入中...</div>
@@ -148,23 +146,20 @@
         <div class="black-group group-1" onclick="checkAnswer(2, this)">
             <div class="black-key k1"></div><div class="black-key k2"></div>
         </div>
-
         <div class="black-group group-2" onclick="checkAnswer(3, this)">
             <div class="black-key k1"></div><div class="black-key k2"></div><div class="black-key k3"></div>
         </div>
-
         <div class="black-group group-3" onclick="checkAnswer(2, this)">
             <div class="black-key k1"></div><div class="black-key k2"></div>
         </div>
-
         <div class="black-group group-4" onclick="checkAnswer(3, this)">
             <div class="black-key k1"></div><div class="black-key k2"></div><div class="black-key k3"></div>
         </div>
     </div>
 
     <div id="victory-screen">
-        <h2 style="font-size: 3.5rem; color: #fbbf24;">🎉 挑戰成功 🎉</h2>
-        <button onclick="resetRound()" style="padding: 18px 50px; font-size: 1.6rem; background: #22c55e; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 8px 0 #166534;">再玩一次</button>
+        <h2 style="font-size: 3rem; color: #fbbf24; text-align: center;">🎉 太厲害了！ 🎉<br>你找到了所有的房子！</h2>
+        <button onclick="resetRound()" style="margin-top:20px; padding: 18px 50px; font-size: 1.6rem; background: #22c55e; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold;">再玩一次</button>
     </div>
 
     <script>
@@ -226,13 +221,11 @@
                 p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                 p.style.left = cx + 'px';
                 p.style.top = cy + 'px';
-                
                 const angle = Math.random() * Math.PI * 2;
                 const dist = 60 + Math.random() * 120;
                 p.style.setProperty('--x', Math.cos(angle) * dist + 'px');
                 p.style.setProperty('--y', Math.sin(angle) * dist + 'px');
-                p.style.animation = `firework-burst 0.8s ease-out forwards`;
-                
+                p.style.animation = `firework-mega-burst 0.8s ease-out forwards`;
                 piano.appendChild(p);
                 setTimeout(() => p.remove(), 1000);
             }
